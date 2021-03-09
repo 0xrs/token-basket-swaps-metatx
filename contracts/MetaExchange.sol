@@ -26,71 +26,67 @@ contract MetaExchange is VerifySignature {
       * 7 -> 'Order has already been cancelled or filled'
       */
     /* event Failed(uint code, address indexed makerAddress, uint makerAmount, address indexed makerToken, address takerAddress, uint takerAmount, address indexed takerToken, uint256 expiration, uint256 nonce); */
+    struct Order {
+        address[] makerErc20Addresses;
+        uint256[] makerErc20Amounts;
+        address[] makerErc721Addresses;
+        uint256[] makerErc721Amounts;
+        address[] makerErc1155Addresses;
+        uint256[] makerErc1155Amounts;
+        address[] takerErc20Addresses;
+        uint256[] takerErc20Amounts;
+        address[] takerErc721Addresses;
+        uint256[] takerErc721Amounts;
+        address[] takerErc1155Addresses;
+        uint256[] takerErc1155Amounts;
+        uint256 expiration;
+    }
 
     function fill(address makerAddress,
         address takerAddress,
-        address[] memory makerErc20Addresses,
-        uint256[] memory makerErc20Amounts,
-        address[] memory makerErc721Addresses,
-        uint256[] memory makerErc721Amounts,
-        //address[] memory makerErc1155Addresses,
-        //uint256[] memory makerErc1155Amounts,
-        address[] memory takerErc20Addresses,
-        uint256[] memory takerErc20Amounts,
-        address[] memory takerErc721Addresses,
-        uint256[] memory takerErc721Amounts,
-        //address[] memory takerErc1155Addresses,
-        //uint256[] memory takerErc1155Amounts,
-        uint256 expiration,
-        uint256 nonce,
-        bytes memory signedMsg
-        //uint8 v,
-        //bytes32 r,
-        //bytes32 s
+        Order memory order,
+        bytes memory makerOrderSig,
+        bytes memory takerOrderSig,
+        uint256 nonce
         )
     public {
 
-        if (makerAddress == takerAddress) {
-            /* msg.sender.transfer(msg.value);
-            Failed(1,
-            makerAddress, makerAmount, makerToken,
-            takerAddress, takerAmount, takerToken,
-            expiration, nonce); */
-            return;
-        }
+        require(verify(
+            makerAddress,
+            takerAddress,
+            order.makerErc20Addresses,
+            order.makerErc20Amounts,
+            order.makerErc721Addresses,
+            order.makerErc721Amounts,
+            order.makerErc1155Addresses,
+            order.makerErc1155Amounts,
+            order.expiration,
+            nonce,
+            makerOrderSig)==true, "Maker Order Signature not valid");
 
-        if (expiration < now) {
-            /* msg.sender.transfer(msg.value);
-            Failed(2,
-                makerAddress, makerAmount, makerToken,
-                takerAddress, takerAmount, takerToken,
-                expiration, nonce); */
-            return;
-        }
+        require(verify(
+            makerAddress,
+            takerAddress,
+            order.takerErc20Addresses,
+            order.takerErc20Amounts,
+            order.takerErc721Addresses,
+            order.takerErc721Amounts,
+            order.takerErc1155Addresses,
+            order.takerErc1155Amounts,
+            order.expiration,
+            nonce,
+            takerOrderSig)==true, "Taker Order Signature not valid");
         // Validate the message by signature.
-        (bytes32 hash, bool validSig) = verify(makerAddress, makerAddress, takerAddress, makerErc20Addresses,
-            makerErc20Amounts, takerErc20Addresses, takerErc20Amounts,
-            expiration, nonce, signedMsg);
-        require(validSig == true, "Signature not valid");
-
-        if (fills[hash]) {
-            /* msg.sender.transfer(msg.value);
-            Failed(3,
-                makerAddress, makerAmount, makerToken,
-                takerAddress, takerAmount, takerToken,
-                expiration, nonce); */
-            return;
-        }
 
         uint i;
 
         //trade erc20s
-        for (i=0; i<makerErc20Addresses.length; i++) {
-            IERC20(makerErc20Addresses[i]).transferFrom(makerAddress, takerAddress, makerErc20Amounts[i]);
+        for (i=0; i<order.makerErc20Addresses.length; i++) {
+            IERC20(order.makerErc20Addresses[i]).transferFrom(makerAddress, takerAddress, order.makerErc20Amounts[i]);
         }
 
-        for (i=0; i<takerErc20Addresses.length; i++) {
-            IERC20(takerErc20Addresses[i]).transferFrom(takerAddress, makerAddress, takerErc20Amounts[i]);
+        for (i=0; i<order.takerErc20Addresses.length; i++) {
+            IERC20(order.takerErc20Addresses[i]).transferFrom(takerAddress, makerAddress, order.takerErc20Amounts[i]);
         }
 
         //trade erc721s

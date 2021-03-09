@@ -84,26 +84,43 @@ async function main() {
     let takerAddress = addr1;
     let makerErc20Addresses = [f1.address];
     let makerErc20Amounts = [web3.utils.toWei('250', 'ether')];
+    let makerErc721Addresses = [f1.address];
+    let makerErc721Amounts = [web3.utils.toWei('250', 'ether')];
+    let makerErc1155Addresses = [f1.address];
+    let makerErc1155Amounts = [web3.utils.toWei('250', 'ether')];
     let takerErc20Addresses = [f2.address];
     let takerErc20Amounts = [web3.utils.toWei('750', 'ether')];
+    let takerErc721Addresses = [f2.address];
+    let takerErc721Amounts = [web3.utils.toWei('750', 'ether')];
+    let takerErc1155Addresses = [f2.address];
+    let takerErc1155Amounts = [web3.utils.toWei('750', 'ether')];
+
     let expiration = new Date().getTime() + 60000;
     let nonce = 1;
 
     let args = [makerAddress, takerAddress, makerErc20Addresses,
         makerErc20Amounts, takerErc20Addresses, takerErc20Amounts,
         expiration, nonce];
-
-    let argTypes = ['address', 'address', 'address[]', 'uint256[]',
-        'address[]', 'uint256[]', 'uint256', 'uint256'];
+    let makerArgs = [makerAddress, takerAddress, makerErc20Addresses,
+        makerErc20Amounts, makerErc721Addresses, makerErc721Amounts,
+        makerErc1155Addresses, makerErc1155Amounts, expiration, nonce];
+    let takerArgs = [makerAddress, takerAddress, takerErc20Addresses,
+        takerErc20Amounts, takerErc721Addresses, takerErc721Amounts,
+        takerErc1155Addresses, takerErc1155Amounts, expiration, nonce];
+    // let argTypes = ['address', 'address', 'address[]', 'uint256[]',
+    //     'address[]', 'uint256[]', 'uint256', 'uint256'];
 
     // console.log(...args);
     // const msghash = await verifySignature.getMessageHash("0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C",
     //     123,
     //     "coffee and donuts",
     //     1);
-    const msgHash = await verifySignature.getMessageHash(...args);
-    const signedMsg = await web3.eth.sign(msgHash, owner, console.log);
-    console.log(signedMsg);
+    const makerMsgHash = await verifySignature.getMessageHash(...makerArgs);
+    const signedMakerMsg = await web3.eth.sign(makerMsgHash, owner, console.log);
+    console.log(signedMakerMsg);
+    const takerMsgHash = await verifySignature.getMessageHash(...takerArgs);
+    const signedTakerMsg = await web3.eth.sign(takerMsgHash, owner, console.log);
+    console.log(signedTakerMsg);
     // const (r,s,v) = await verifySignature.splitSignature(signedMsg);
     //const signedMsgHash = await verifySignature.getEthSignedMessageHash();
     // const verify = await verifySignature.verify(owner,
@@ -114,7 +131,24 @@ async function main() {
     //     signedMsg);
     // console.log(verify);
 
-    await metaExchange.connect(addr1_e).fill(...args, signedMsg);
+    let order = {
+        'makerErc20Addresses': makerErc20Addresses,
+        'makerErc20Amounts': makerErc20Amounts,
+        'makerErc721Addresses': makerErc721Addresses,
+        'makerErc721Amounts': makerErc721Amounts,
+        'makerErc1155Addresses': makerErc1155Addresses,
+        'makerErc1155Amounts': makerErc1155Amounts,
+        'takerErc20Addresses': takerErc20Addresses,
+        'takerErc20Amounts': takerErc20Amounts,
+        'takerErc721Addresses': takerErc721Addresses,
+        'takerErc721Amounts': takerErc721Amounts,
+        'takerErc1155Addresses': takerErc1155Addresses,
+        'takerErc1155Amounts': takerErc1155Amounts,
+        'expiration': expiration
+    }
+    await metaExchange.connect(addr1_e).
+        fill(makerAddress, takerAddress, order, signedMakerMsg, signedTakerMsg, nonce);
+
     console.log(web3.utils.fromWei( (await f1.balanceOf(owner)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f1.balanceOf(addr1)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f2.balanceOf(owner)).toString(), 'ether'));
