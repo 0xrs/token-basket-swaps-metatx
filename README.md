@@ -10,22 +10,24 @@ contract with signedHash by maker.
 defined in the `VerifySignature.sol` contract. If the signature matches, a swap of the basket of
 tokens is initiated by the MetaExchange.
 
+Each filled order is saved in a mapping called `fills` with a key of `orderHash` which is derived using
+`keccak256(abi.encodePacked(makerOrderSig, takerOrderSig))` where `makerOrderSig` and `takerOrderSig` are
+signed hash messages using maker's private key with maker order tokens and taker order tokens as arguments.
+They were split into separate hashes to avoid stack too deep error.
 
-### Glossary
+Since both `makerOrderSig` and `takerOrderSig` take nonce as an argument, once an orderHash is filled, the
+same nonce cannot be used with the same order params. This is done to disallow a taker to execute the same signed
+transaction multiple times at the same time to allow the maker to create orders with the same params again.
 
-`makerAddress`:
+Each order also has an expiration timestamp after which the order is no longer valid.
 
-`takerAddress`:
-
-`orderHash`:
-
-`nonce`:
-
-
+### Instructions
 
 ```
 npm i
 npx hardhat test
 ```
+
+### Output
 
 ![](docs/screenshot.png)
