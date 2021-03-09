@@ -1,23 +1,23 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.6.9;
 pragma experimental ABIEncoderV2;
-import "hardhat/console.sol";
+
 contract VerifySignature {
 
     function getMessageHash(
         address makerAddress,
-        address takerAddress,
         address[] memory erc20Addresses,
         uint256[] memory erc20Amounts,
         address[] memory erc721Addresses,
-        uint256[] memory erc721Amounts,
+        uint256[] memory erc721Ids,
         address[] memory erc1155Addresses,
+        uint256[] memory erc1155Ids,
         uint256[] memory erc1155Amounts,
         uint256 expiration,
         uint256 nonce)
     public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(makerAddress, takerAddress, erc20Addresses,
-            erc20Amounts, erc721Addresses, erc721Amounts, erc1155Addresses,
+        return keccak256(abi.encodePacked(makerAddress, erc20Addresses,
+            erc20Amounts, erc721Addresses, erc721Ids, erc1155Addresses, erc1155Ids,
             erc1155Amounts, expiration, nonce));
     }
 
@@ -31,12 +31,12 @@ contract VerifySignature {
 
     function verify(
         address makerAddress,
-        address takerAddress,
         address[] memory erc20Addresses,
         uint256[] memory erc20Amounts,
         address[] memory erc721Addresses,
-        uint256[] memory erc721Amounts,
+        uint256[] memory erc721Ids,
         address[] memory erc1155Addresses,
+        uint256[] memory erc1155Ids,
         uint256[] memory erc1155Amounts,
         uint256 expiration,
         uint256 nonce,
@@ -51,9 +51,9 @@ contract VerifySignature {
         //bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
 
         return recoverSigner(getEthSignedMessageHash(
-            getMessageHash(makerAddress, takerAddress, erc20Addresses,
-                erc20Amounts, erc721Addresses, erc721Amounts, erc1155Addresses,
-                erc1155Amounts, expiration, nonce)
+            getMessageHash(makerAddress, erc20Addresses,
+                erc20Amounts, erc721Addresses, erc721Ids, erc1155Addresses,
+                erc1155Ids, erc1155Amounts, expiration, nonce)
                 ),
             signature) == makerAddress;
     }

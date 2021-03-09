@@ -59,14 +59,14 @@ async function main() {
     const f1 = await MockERC20.deploy("F1", "F1");
     await f1.deployed();
 
-    f1.mint(owner, initial_mint);
-    f1.mint(addr1, initial_mint);
+    await f1.mint(owner, initial_mint);
+    await f1.mint(addr1, initial_mint);
 
     const f2 = await MockERC20.deploy("F2", "F2");
     await f2.deployed();
 
-    f2.mint(owner, initial_mint);
-    f2.mint(addr1, initial_mint);
+    await f2.mint(owner, initial_mint);
+    await f2.mint(addr1, initial_mint);
 
     //approvals
     await f1.connect(owner_e).approve(metaExchange.address, await f1.balanceOf(owner));
@@ -75,25 +75,81 @@ async function main() {
     await f2.connect(owner_e).approve(metaExchange.address, await f2.balanceOf(owner));
     await f2.connect(addr1_e).approve(metaExchange.address, await f2.balanceOf(addr1));
 
+    const MockERC721 = await hre.ethers.getContractFactory("MockERC721");
+    const nf1 = await MockERC721.deploy("NF1", "NF1");
+    await nf1.deployed();
+
+    await nf1.mint(owner, 1);
+    await nf1.mint(addr1, 2);
+
+    const nf2 = await MockERC721.deploy("NF2", "NF2");
+    await nf2.deployed();
+
+    await nf2.mint(owner, 1);
+    await nf2.mint(addr1, 2);
+
+    //approvals
+    await nf1.connect(owner_e).approve(metaExchange.address, 1);
+    await nf1.connect(addr1_e).approve(metaExchange.address, 2);
+
+    await nf2.connect(owner_e).approve(metaExchange.address, 1);
+    await nf2.connect(addr1_e).approve(metaExchange.address, 2);
+
+    const MockERC1155 = await hre.ethers.getContractFactory("MockERC1155");
+    const nff1 = await MockERC1155.deploy("NFF1");
+    await nff1.deployed();
+
+    await nff1.mint(owner, 1, 10, "0x");
+    await nff1.mint(addr1, 2, 10, "0x");
+
+    const nff2 = await MockERC1155.deploy("NFF2");
+    await nff2.deployed();
+
+
+
+    await nff2.mint(owner, 1, 10, "0x");
+    await nff2.mint(addr1, 2, 10, "0x");
+    //approvals
+    await nff1.connect(owner_e).setApprovalForAll(metaExchange.address, true);
+    await nff1.connect(addr1_e).setApprovalForAll(metaExchange.address, true);
+
+    await nff2.connect(owner_e).setApprovalForAll(metaExchange.address, true);
+    await nff2.connect(addr1_e).setApprovalForAll(metaExchange.address, true);
+
+
     console.log(web3.utils.fromWei( (await f1.balanceOf(owner)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f1.balanceOf(addr1)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f2.balanceOf(owner)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f2.balanceOf(addr1)).toString(), 'ether'));
 
+    console.log("Owner of NFT1 ID1: " + (await nf1.ownerOf(1)));
+    console.log("Owner of NFT2 ID2: " + (await nf2.ownerOf(2)));
+
+    console.log("Balance of NFT1 ID1 User1: " + (await nff1.balanceOf(owner, 1)));
+    console.log("Balance of NFT1 ID2 User1: " + (await nff1.balanceOf(owner, 2)));
+    console.log("Balance of NFT1 ID1 User2: " + (await nff1.balanceOf(addr1, 1)));
+    console.log("Balance of NFT1 ID2 User2: " + (await nff1.balanceOf(addr1, 2)));
+    console.log("Balance of NFT2 ID1 User1: " + (await nff2.balanceOf(owner, 1)));
+    console.log("Balance of NFT2 ID2 User1: " + (await nff2.balanceOf(owner, 2)));
+    console.log("Balance of NFT2 ID1 User2: " + (await nff2.balanceOf(addr1, 1)));
+    console.log("Balance of NFT2 ID2 User2: " + (await nff2.balanceOf(addr1, 2)));
+
     let makerAddress = owner;
     let takerAddress = addr1;
     let makerErc20Addresses = [f1.address];
     let makerErc20Amounts = [web3.utils.toWei('250', 'ether')];
-    let makerErc721Addresses = [f1.address];
-    let makerErc721Amounts = [web3.utils.toWei('250', 'ether')];
-    let makerErc1155Addresses = [f1.address];
-    let makerErc1155Amounts = [web3.utils.toWei('250', 'ether')];
+    let makerErc721Addresses = [nf1.address];
+    let makerErc721Ids = [1];
+    let makerErc1155Addresses = [nff1.address];
+    let makerErc1155Ids = [1];
+    let makerErc1155Amounts = [4];
     let takerErc20Addresses = [f2.address];
     let takerErc20Amounts = [web3.utils.toWei('750', 'ether')];
-    let takerErc721Addresses = [f2.address];
-    let takerErc721Amounts = [web3.utils.toWei('750', 'ether')];
-    let takerErc1155Addresses = [f2.address];
-    let takerErc1155Amounts = [web3.utils.toWei('750', 'ether')];
+    let takerErc721Addresses = [nf2.address];
+    let takerErc721Ids = [2];
+    let takerErc1155Addresses = [nff2.address];
+    let takerErc1155Ids = [2];
+    let takerErc1155Amounts = [2];
 
     let expiration = new Date().getTime() + 60000;
     let nonce = 1;
@@ -101,12 +157,12 @@ async function main() {
     let args = [makerAddress, takerAddress, makerErc20Addresses,
         makerErc20Amounts, takerErc20Addresses, takerErc20Amounts,
         expiration, nonce];
-    let makerArgs = [makerAddress, takerAddress, makerErc20Addresses,
-        makerErc20Amounts, makerErc721Addresses, makerErc721Amounts,
-        makerErc1155Addresses, makerErc1155Amounts, expiration, nonce];
-    let takerArgs = [makerAddress, takerAddress, takerErc20Addresses,
-        takerErc20Amounts, takerErc721Addresses, takerErc721Amounts,
-        takerErc1155Addresses, takerErc1155Amounts, expiration, nonce];
+    let makerArgs = [makerAddress, makerErc20Addresses,
+        makerErc20Amounts, makerErc721Addresses, makerErc721Ids,
+        makerErc1155Addresses, makerErc1155Ids, makerErc1155Amounts, expiration, nonce];
+    let takerArgs = [makerAddress, takerErc20Addresses,
+        takerErc20Amounts, takerErc721Addresses, takerErc721Ids,
+        takerErc1155Addresses, takerErc1155Ids, takerErc1155Amounts, expiration, nonce];
     // let argTypes = ['address', 'address', 'address[]', 'uint256[]',
     //     'address[]', 'uint256[]', 'uint256', 'uint256'];
 
@@ -135,14 +191,16 @@ async function main() {
         'makerErc20Addresses': makerErc20Addresses,
         'makerErc20Amounts': makerErc20Amounts,
         'makerErc721Addresses': makerErc721Addresses,
-        'makerErc721Amounts': makerErc721Amounts,
+        'makerErc721Ids': makerErc721Ids,
         'makerErc1155Addresses': makerErc1155Addresses,
+        'makerErc1155Ids': makerErc721Ids,
         'makerErc1155Amounts': makerErc1155Amounts,
         'takerErc20Addresses': takerErc20Addresses,
         'takerErc20Amounts': takerErc20Amounts,
         'takerErc721Addresses': takerErc721Addresses,
-        'takerErc721Amounts': takerErc721Amounts,
+        'takerErc721Ids': takerErc721Ids,
         'takerErc1155Addresses': takerErc1155Addresses,
+        'takerErc1155Ids': takerErc721Ids,
         'takerErc1155Amounts': takerErc1155Amounts,
         'expiration': expiration
     }
@@ -153,6 +211,19 @@ async function main() {
     console.log(web3.utils.fromWei( (await f1.balanceOf(addr1)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f2.balanceOf(owner)).toString(), 'ether'));
     console.log(web3.utils.fromWei( (await f2.balanceOf(addr1)).toString(), 'ether'));
+
+    console.log("Owner of NFT1 ID1: " + (await nf1.ownerOf(1)));
+    console.log("Owner of NFT2 ID2: " + (await nf2.ownerOf(2)));
+
+    console.log("Balance of NFT1 ID1 User1: " + (await nff1.balanceOf(owner, 1)));
+    console.log("Balance of NFT1 ID2 User1: " + (await nff1.balanceOf(owner, 2)));
+    console.log("Balance of NFT1 ID1 User2: " + (await nff1.balanceOf(addr1, 1)));
+    console.log("Balance of NFT1 ID2 User2: " + (await nff1.balanceOf(addr1, 2)));
+    console.log("Balance of NFT2 ID1 User1: " + (await nff2.balanceOf(owner, 1)));
+    console.log("Balance of NFT2 ID2 User1: " + (await nff2.balanceOf(owner, 2)));
+    console.log("Balance of NFT2 ID1 User2: " + (await nff2.balanceOf(addr1, 1)));
+    console.log("Balance of NFT2 ID2 User2: " + (await nff2.balanceOf(addr1, 2)));
+
     // let args = [makerAddress, takerAddress, makerErc20Addresses,
     //     makerErc20Amounts, takerErc20Addresses, takerErc20Amounts,
     //     expiration, nonce];
