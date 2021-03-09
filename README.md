@@ -17,7 +17,8 @@ They were split into separate hashes to avoid stack too deep error.
 
 Since both `makerOrderSig` and `takerOrderSig` take nonce as an argument, once an orderHash is filled, the
 same nonce cannot be used with the same order params. This is done to disallow a taker to execute the same signed
-transaction multiple times at the same time to allow the maker to create orders with the same params again.
+transaction multiple times and at the same time this design also allows the maker to create orders with the same params again
+as the hash will change with the next nonce.
 
 Each order also has an expiration timestamp after which the order is no longer valid.
 
