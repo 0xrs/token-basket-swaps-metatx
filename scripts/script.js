@@ -4,7 +4,6 @@
 // When running the script with `hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
-const eutil = require('ethjs-util');
 // const Web3 = require("Web3");
 // const Wallet = ethers.Wallet;
 // const utils = ethers.utils;
@@ -193,14 +192,14 @@ async function main() {
         'makerErc721Addresses': makerErc721Addresses,
         'makerErc721Ids': makerErc721Ids,
         'makerErc1155Addresses': makerErc1155Addresses,
-        'makerErc1155Ids': makerErc721Ids,
+        'makerErc1155Ids': makerErc1155Ids,
         'makerErc1155Amounts': makerErc1155Amounts,
         'takerErc20Addresses': takerErc20Addresses,
         'takerErc20Amounts': takerErc20Amounts,
         'takerErc721Addresses': takerErc721Addresses,
         'takerErc721Ids': takerErc721Ids,
         'takerErc1155Addresses': takerErc1155Addresses,
-        'takerErc1155Ids': takerErc721Ids,
+        'takerErc1155Ids': takerErc1155Ids,
         'takerErc1155Amounts': takerErc1155Amounts,
         'expiration': expiration
     }

@@ -84,9 +84,28 @@ contract MetaExchange is VerifySignature {
     public {
 
         bytes32 orderHash = keccak256(abi.encodePacked(makerOrderSig, takerOrderSig));
-        //require(fills[orderHash] == false, "Order already filled or canceled by the maker");
+        require(fills[orderHash] == false, "Order already filled or canceled by the maker");
+        require(makerAddress != takerAddress, "Maker and taker should be different");
+        require(order.expiration > now, "Order already expired and no longer valid");
+        require(msg.sender != makerAddress, "Order cannot be executed by maker");
 
-        //check if order already filled
+        require(order.makerErc20Addresses.length == order.makerErc20Amounts.length,
+            "Invalid Order, Size of erc20 address array and amounts different");
+        require(order.makerErc721Addresses.length == order.makerErc721Ids.length,
+            "Invalid Order, Size of erc721 address array and amounts different");
+        require(order.makerErc1155Addresses.length == order.makerErc1155Ids.length
+            && order.makerErc1155Addresses.length == order.makerErc1155Amounts.length,
+            "Invalid Order, Size of erc1155 address array and amounts different");
+
+        require(order.takerErc20Addresses.length == order.takerErc20Amounts.length,
+            "Invalid Order, Size of erc20 address array and amounts different");
+        require(order.takerErc721Addresses.length == order.takerErc721Ids.length,
+            "Invalid Order, Size of erc721 address array and amounts different");
+        require(order.takerErc1155Addresses.length == order.takerErc1155Ids.length
+            && order.takerErc1155Addresses.length == order.takerErc1155Amounts.length,
+            "Invalid Order, Size of erc1155 address array and amounts different");
+
+        /* //check if order already filled
         if (fills[orderHash]) {
             emit Failed(3, makerAddress, takerAddress, orderHash, order.expiration, nonce);
             return;
@@ -108,7 +127,7 @@ contract MetaExchange is VerifySignature {
         if (msg.sender != takerAddress) {
             emit Failed(4, makerAddress, takerAddress, orderHash, order.expiration, nonce);
             return;
-        }
+        } */
 
 
         require(verify(
@@ -179,7 +198,11 @@ contract MetaExchange is VerifySignature {
         // Only the maker can cancel an order
         if (msg.sender == makerAddress) {
 
-            // Check that order has not already been filled/cancelled
+            require(fills[orderHash] == false, "Order already filled or cancelled");
+            fills[orderHash] = true;
+            emit Canceled(makerAddress, takerAddress, orderHash, order.expiration, nonce);
+
+            /* // Check that order has not already been filled/cancelled
             if (fills[orderHash] == false) {
 
                 // Cancel the order by considering it filled.
@@ -190,7 +213,7 @@ contract MetaExchange is VerifySignature {
 
             } else {
                 emit Failed(5, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            }
+            } */
         }
     }
 
