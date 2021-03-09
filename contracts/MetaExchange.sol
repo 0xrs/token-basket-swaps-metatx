@@ -10,8 +10,8 @@ import { IERC1155 } from '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
 import { VerifySignature } from './utils/VerifySignature.sol';
 
 contract MetaExchange is VerifySignature {
+
     mapping (bytes32 => bool) public fills;
-    mapping (address => mapping(uint256 => bool)) public nonces;
 
     /****************************************
    *                EVENTS                *
@@ -39,19 +39,18 @@ contract MetaExchange is VerifySignature {
         uint256[] takerErc1155Ids,
         uint256[] takerErc1155Amounts);
 
-    /* event Canceled(address indexed makerAddress, uint makerAmount, address indexed makerToken, address takerAddress, uint takerAmount, address indexed takerToken, uint256 expiration, uint256 nonce); */
-
+    event Canceled(address indexed makerAddress, address takerAddress, bytes32 orderHash, uint256 expiration, uint256 nonce);
     /** Event thrown when a trade fails
       * Error codes:
       * 1 -> 'The makeAddress and takerAddress must be different',
       * 2 -> 'The order has expired',
       * 3 -> 'This order has already been filled',
-      * 4 -> 'The ether sent with this transaction does not match takerAmount',
-      * 5 -> 'No ether is required for a trade between tokens',
-      * 6 -> 'The sender of this transaction must match the takerAddress',
-      * 7 -> 'Order has already been cancelled or filled'
+      * 4 -> 'The sender of this transaction must match the takerAddress',
+      * 5 -> 'Order has already been cancelled or filled'
+      * 6 -> 'Nonce already filled'
       */
-    /* event Failed(uint code, address indexed makerAddress, uint makerAmount, address indexed makerToken, address takerAddress, uint takerAmount, address indexed takerToken, uint256 expiration, uint256 nonce); */
+    event Failed(uint8 code, address indexed makerAddress, address takerAddress, bytes32 orderHash, uint256 expiration, uint256 nonce);
+
     struct Order {
         address[] makerErc20Addresses;
         uint256[] makerErc20Amounts;
@@ -84,6 +83,34 @@ contract MetaExchange is VerifySignature {
         )
     public {
 
+        bytes32 orderHash = keccak256(abi.encodePacked(makerOrderSig, takerOrderSig));
+        //require(fills[orderHash] == false, "Order already filled or canceled by the maker");
+
+        //check if order already filled
+        if (fills[orderHash]) {
+            emit Failed(3, makerAddress, takerAddress, orderHash, order.expiration, nonce);
+            return;
+        }
+
+        //maker should be different than taker
+        if (makerAddress == takerAddress) {
+            emit Failed(1, makerAddress, takerAddress, orderHash, order.expiration, nonce);
+            return;
+        }
+
+        //check if order expired
+        if (order.expiration < now) {
+            emit Failed(2, makerAddress, takerAddress, orderHash, order.expiration, nonce);
+            return;
+        }
+
+        //the sender of transaction should match takerAddress
+        if (msg.sender != takerAddress) {
+            emit Failed(4, makerAddress, takerAddress, orderHash, order.expiration, nonce);
+            return;
+        }
+
+
         require(verify(
             makerAddress,
             order.makerErc20Addresses,
@@ -110,20 +137,61 @@ contract MetaExchange is VerifySignature {
             nonce,
             takerOrderSig)==true, "Taker Order Signature not valid");
 
-        bytes32 orderHash = keccak256(abi.encodePacked(makerOrderSig, takerOrderSig));
-
         _fillOrder(order, makerAddress, takerAddress, orderHash);
-        // Validate the message by signature.
-
-        //trade erc721s
-
-        //trade erc1155s
-
-
     }
 
-    function cancelOrder() public {
+    function cancelOrder(address makerAddress,
+        address takerAddress,
+        Order memory order,
+        bytes memory makerOrderSig,
+        bytes memory takerOrderSig,
+        uint256 nonce
+        ) public {
 
+        bytes32 orderHash = keccak256(abi.encodePacked(makerOrderSig, takerOrderSig));
+
+        require(verify(
+            makerAddress,
+            order.makerErc20Addresses,
+            order.makerErc20Amounts,
+            order.makerErc721Addresses,
+            order.makerErc721Ids,
+            order.makerErc1155Addresses,
+            order.makerErc1155Ids,
+            order.makerErc1155Amounts,
+            order.expiration,
+            nonce,
+            makerOrderSig)==true, "Maker Order Signature not valid");
+
+        require(verify(
+            makerAddress,
+            order.takerErc20Addresses,
+            order.takerErc20Amounts,
+            order.takerErc721Addresses,
+            order.takerErc721Ids,
+            order.takerErc1155Addresses,
+            order.takerErc1155Ids,
+            order.takerErc1155Amounts,
+            order.expiration,
+            nonce,
+            takerOrderSig)==true, "Taker Order Signature not valid");
+
+        // Only the maker can cancel an order
+        if (msg.sender == makerAddress) {
+
+            // Check that order has not already been filled/cancelled
+            if (fills[orderHash] == false) {
+
+                // Cancel the order by considering it filled.
+                fills[orderHash] = true;
+
+                // Broadcast an event to the blockchain.
+                emit Canceled(makerAddress, takerAddress, orderHash, order.expiration, nonce);
+
+            } else {
+                emit Failed(5, makerAddress, takerAddress, orderHash, order.expiration, nonce);
+            }
+        }
     }
 
     /****************************************
@@ -134,32 +202,47 @@ contract MetaExchange is VerifySignature {
 
         uint i;
 
+        fills[_orderHash] = true;
+
         //trade erc20s
         for (i=0; i<_order.makerErc20Addresses.length; i++) {
+            require(_order.makerErc20Addresses[i] != address(0), "Invalid ERC20");
             IERC20(_order.makerErc20Addresses[i]).transferFrom(_makerAddress, _takerAddress, _order.makerErc20Amounts[i]);
         }
 
         for (i=0; i<_order.takerErc20Addresses.length; i++) {
-            IERC20(_order.takerErc20Addresses[i]).transferFrom(_takerAddress, _makerAddress, _order.takerErc20Amounts[i]);
+            if (_order.takerErc20Addresses[i] == address(0)) {
+                require(msg.value == _order.takerErc20Amounts[i], "Ether amount sent incorrect");
+                address payable mkrAdress = address(uint160(_makerAddress));
+                mkrAdress.transfer(msg.value);
+            }
+            else {
+                IERC20(_order.takerErc20Addresses[i]).transferFrom(_takerAddress, _makerAddress, _order.takerErc20Amounts[i]);
+            }
+
         }
 
+        //trade erc721s
         for (i=0; i<_order.makerErc721Addresses.length; i++) {
+            require(_order.makerErc721Addresses[i] != address(0), "Invalid ERC721");
             IERC721(_order.makerErc721Addresses[i]).transferFrom(_makerAddress, _takerAddress, _order.makerErc721Ids[i]);
         }
 
         for (i=0; i<_order.takerErc721Addresses.length; i++) {
+            require(_order.takerErc721Addresses[i] != address(0), "Invalid ERC721");
             IERC721(_order.takerErc721Addresses[i]).transferFrom(_takerAddress, _makerAddress, _order.takerErc721Ids[i]);
         }
 
+        //trade erc1155s
         for (i=0; i<_order.makerErc1155Addresses.length; i++) {
+            require(_order.makerErc1155Addresses[i] != address(0), "Invalid ERC1155");
             IERC1155(_order.makerErc1155Addresses[i]).safeTransferFrom(_makerAddress, _takerAddress, _order.makerErc1155Ids[i], _order.makerErc1155Amounts[i], "0x");
         }
 
         for (i=0; i<_order.takerErc1155Addresses.length; i++) {
+            require(_order.takerErc1155Addresses[i] != address(0), "Invalid ERC1155");
             IERC1155(_order.takerErc1155Addresses[i]).safeTransferFrom(_takerAddress, _makerAddress, _order.takerErc1155Ids[i], _order.takerErc1155Amounts[i], "0x");
         }
-
-        fills[_orderHash] = true;
 
         _emitMakerFilled(_order, _makerAddress, _takerAddress, _orderHash);
         _emitTakerFilled(_order, _makerAddress, _takerAddress, _orderHash);

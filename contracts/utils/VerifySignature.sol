@@ -42,13 +42,7 @@ contract VerifySignature {
         uint256 nonce,
         bytes memory signature
     )
-        public pure returns (bool)
-    {
-        //bytes32 messageHash = getMessageHash(_to, _amount, _message, _nonce);
-        /* bytes32 messageHash = getMessageHash(makerAddress, takerAddress, erc20Addresses,
-            erc20Amounts, erc721Addresses, erc721Amounts, erc1155Addresses,
-            erc1155Amounts, expiration, nonce); */
-        //bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
+        public pure returns (bool) {
 
         return recoverSigner(getEthSignedMessageHash(
             getMessageHash(makerAddress, erc20Addresses,
@@ -57,36 +51,6 @@ contract VerifySignature {
                 ),
             signature) == makerAddress;
     }
-
-    /* function verify(
-        address _signer,
-        address makerAddress,
-        address takerAddress,
-        address[] memory makerErc20Addresses,
-        uint256[] memory makerErc20Amounts,
-        //address[] memory makerErc721Addresses,
-        //uint256[] memory makerErc721Amounts,
-        //address[] memory makerErc1155Addresses,
-        //uint256[] memory makerErc1155Amounts,
-        address[] memory takerErc20Addresses,
-        uint256[] memory takerErc20Amounts,
-        //address[] memory takerErc721Addresses,
-        //uint256[] memory takerErc721Amounts,
-        //address[] memory takerErc1155Addresses,
-        //uint256[] memory takerErc1155Amounts,
-        uint256 expiration,
-        uint256 nonce,
-        bytes memory signature
-    )
-        public pure returns (bytes32, bool)
-    {
-        //bytes32 messageHash = getMessageHash(_to, _amount, _message, _nonce);
-        bytes32 messageHash = getMessageHash(makerAddress, takerAddress, makerErc20Addresses, makerErc20Amounts,
-            takerErc20Addresses, takerErc20Amounts, expiration, nonce);
-        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
-
-        return (messageHash, recoverSigner(ethSignedMessageHash, signature) == _signer);
-    } */
 
     function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature)
         public pure returns (address)
