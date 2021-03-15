@@ -141,10 +141,10 @@ describe("Do a transaction of basket of assets of different types", function() {
             takerErc1155Addresses, takerErc1155Ids, takerErc1155Amounts, expiration, nonce];
 
         const makerMsgHash = await verifySignature.getMessageHash(...makerArgs);
-        const signedMakerMsg = await web3.eth.sign(makerMsgHash, owner, console.log);
+        const signedMakerMsg = await web3.eth.sign(makerMsgHash, owner, null);
 
         const takerMsgHash = await verifySignature.getMessageHash(...takerArgs);
-        const signedTakerMsg = await web3.eth.sign(takerMsgHash, owner, console.log);
+        const signedTakerMsg = await web3.eth.sign(takerMsgHash, owner, null);
 
         let order = {
             'makerErc20Addresses': makerErc20Addresses,
@@ -197,10 +197,10 @@ describe("Do a transaction of basket of assets of different types", function() {
             takerErc1155Addresses, takerErc1155Ids, takerErc1155Amounts, expiration, nonce];
 
         const makerMsgHash = await verifySignature.getMessageHash(...makerArgs);
-        const signedMakerMsg = await web3.eth.sign(makerMsgHash, owner, console.log);
+        const signedMakerMsg = await web3.eth.sign(makerMsgHash, owner, null);
 
         const takerMsgHash = await verifySignature.getMessageHash(...takerArgs);
-        const signedTakerMsg = await web3.eth.sign(takerMsgHash, owner, console.log);
+        const signedTakerMsg = await web3.eth.sign(takerMsgHash, owner, null);
 
         let order = {
             'makerErc20Addresses': makerErc20Addresses,

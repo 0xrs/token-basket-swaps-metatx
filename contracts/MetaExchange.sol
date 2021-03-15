@@ -88,7 +88,7 @@ contract MetaExchange is VerifySignature {
         require(makerAddress != takerAddress, "Maker and taker should be different");
         require(order.expiration > now, "Order already expired and no longer valid");
         require(msg.sender != makerAddress, "Order cannot be executed by maker");
-
+        require(msg.sender == takerAddress, "Only taker can execute the order");
         require(order.makerErc20Addresses.length == order.makerErc20Amounts.length,
             "Invalid Order, Size of erc20 address array and amounts different");
         require(order.makerErc721Addresses.length == order.makerErc721Ids.length,
