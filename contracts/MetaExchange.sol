@@ -105,31 +105,6 @@ contract MetaExchange is VerifySignature {
             && order.takerErc1155Addresses.length == order.takerErc1155Amounts.length,
             "Invalid Order, Size of erc1155 address array and amounts different");
 
-        /* //check if order already filled
-        if (fills[orderHash]) {
-            emit Failed(3, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            return;
-        }
-
-        //maker should be different than taker
-        if (makerAddress == takerAddress) {
-            emit Failed(1, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            return;
-        }
-
-        //check if order expired
-        if (order.expiration < now) {
-            emit Failed(2, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            return;
-        }
-
-        //the sender of transaction should match takerAddress
-        if (msg.sender != takerAddress) {
-            emit Failed(4, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            return;
-        } */
-
-
         require(verify(
             makerAddress,
             order.makerErc20Addresses,
@@ -202,18 +177,6 @@ contract MetaExchange is VerifySignature {
             fills[orderHash] = true;
             emit Canceled(makerAddress, takerAddress, orderHash, order.expiration, nonce);
 
-            /* // Check that order has not already been filled/cancelled
-            if (fills[orderHash] == false) {
-
-                // Cancel the order by considering it filled.
-                fills[orderHash] = true;
-
-                // Broadcast an event to the blockchain.
-                emit Canceled(makerAddress, takerAddress, orderHash, order.expiration, nonce);
-
-            } else {
-                emit Failed(5, makerAddress, takerAddress, orderHash, order.expiration, nonce);
-            } */
         }
     }
 
