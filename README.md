@@ -31,4 +31,46 @@ npx hardhat test
 
 ### Output
 
-![](docs/screenshot.png)
+```
+===================Deploying Contracts, Setting Up=====================
+Maker Address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Taker Address: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Initial balance of ERC20 F1 for User1: 100000
+Initial balance of ERC20 F1 for User2: 100000
+Initial balance of ERC20 F2 for User1: 100000
+Initial balance of ERC20 F2 for User2: 100000
+Initial owner of ERC721 NFT1 ID1: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Initial owner of ERC721 NFT2 ID2: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Initial balance of ERC1155 NFT1 ID1 for User1: 10
+Initial balance of ERC1155 NFT1 ID2 for User1: 0
+Initial balance of ERC1155 NFT1 ID1 for User2: 0
+Initial balance of ERC1155 NFT1 ID2 for User2: 10
+Initial balance of ERC1155 NFT2 ID1 for User1: 10
+Initial balance of ERC1155 NFT2 ID2 for User1: 0
+Initial balance of ERC1155 NFT2 ID1 for User2: 0
+Initial balance of ERC1155 NFT2 ID2 for User2: 10
+=====================================================================
+
+
+  Do a transaction of basket of assets of different types
+    ✓ Should fail if transaction is made by maker (126ms)
+    ✓ Should succeed if transaction is made by taker (304ms)
+Final balance of ERC20 F1 for User1: 99750
+Final balance of ERC20 F1 for User2: 100250
+Final balance of ERC20 F2 for User1: 100750
+Final balance of ERC20 F2 for User2: 99250
+Final owner of ERC721 NFT1 ID1: 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Final owner of ERC721 NFT2 ID2: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Final balance of ERC1155 NFT1 ID1 for User1: 6
+Final balance of ERC1155 NFT1 ID2 for User1: 0
+Final balance of ERC1155 NFT1 ID1 for User2: 4
+Final balance of ERC1155 NFT1 ID2 for User2: 10
+Final balance of ERC1155 NFT2 ID1 for User1: 10
+Final balance of ERC1155 NFT2 ID2 for User1: 2
+Final balance of ERC1155 NFT2 ID1 for User2: 0
+Final balance of ERC1155 NFT2 ID2 for User2: 8
+    ✓ User balances should have updated values after swap (316ms)
+
+
+  3 passing (5s)
+  ```
