@@ -40,16 +40,6 @@ contract MetaExchange is VerifySignature {
         uint256[] takerErc1155Amounts);
 
     event Canceled(address indexed makerAddress, address takerAddress, bytes32 orderHash, uint256 expiration, uint256 nonce);
-    /** Event thrown when a trade fails
-      * Error codes:
-      * 1 -> 'The makeAddress and takerAddress must be different',
-      * 2 -> 'The order has expired',
-      * 3 -> 'This order has already been filled',
-      * 4 -> 'The sender of this transaction must match the takerAddress',
-      * 5 -> 'Order has already been cancelled or filled'
-      * 6 -> 'Nonce already filled'
-      */
-    event Failed(uint8 code, address indexed makerAddress, address takerAddress, bytes32 orderHash, uint256 expiration, uint256 nonce);
 
     struct Order {
         address[] makerErc20Addresses;
