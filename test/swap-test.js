@@ -22,7 +22,7 @@ before(async() => {
 
     [owner, addr1, ...addrs] = await web3.eth.getAccounts();
     [owner_e, addr1_e, ...addrs_e] = await ethers.getSigners();
-    const initial_mint = web3.utils.toWei('100000', 'ether');
+    const initial_mint = web3.utils.toWei('1000', 'ether');
     const MetaExchange = await ethers.getContractFactory("MetaExchange");
     metaExchange = await MetaExchange.deploy();
     await metaExchange.deployed();
@@ -130,7 +130,7 @@ describe("Do a transaction of basket of assets of different types", function() {
         let takerErc1155Ids = [2];
         let takerErc1155Amounts = [2];
 
-        let expiration = new Date().getTime() + 60000;
+        let expiration = Math.floor(Date.now() / 1000) + 1000;
         let nonce = 1;
 
         let makerArgs = [makerAddress, makerErc20Addresses,
@@ -186,7 +186,7 @@ describe("Do a transaction of basket of assets of different types", function() {
         let takerErc1155Ids = [2];
         let takerErc1155Amounts = [2];
 
-        let expiration = new Date().getTime() + 60000;
+        let expiration = Math.floor(Date.now() / 1000) + 1000;
         let nonce = 1;
 
         let makerArgs = [makerAddress, makerErc20Addresses,
@@ -225,10 +225,10 @@ describe("Do a transaction of basket of assets of different types", function() {
     })
 
     it("User balances should have updated values after swap", async() => {
-        expect(web3.utils.fromWei((await f1.balanceOf(owner)).toString())).to.equal('99750');
-        expect(web3.utils.fromWei((await f1.balanceOf(addr1)).toString())).to.equal('100250');
-        expect(web3.utils.fromWei((await f2.balanceOf(owner)).toString())).to.equal('100750');
-        expect(web3.utils.fromWei((await f2.balanceOf(addr1)).toString())).to.equal('99250');
+        expect(web3.utils.fromWei((await f1.balanceOf(owner)).toString())).to.equal('750');
+        expect(web3.utils.fromWei((await f1.balanceOf(addr1)).toString())).to.equal('1250');
+        expect(web3.utils.fromWei((await f2.balanceOf(owner)).toString())).to.equal('1750');
+        expect(web3.utils.fromWei((await f2.balanceOf(addr1)).toString())).to.equal('250');
 
         expect(await nf1.ownerOf(1)).to.equal(addr1);
         expect(await nf2.ownerOf(2)).to.equal(owner);
