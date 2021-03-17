@@ -73,6 +73,13 @@ contract Exchange is VerifySig {
     public payable {
         bytes32[] memory _data = bytesToBytes32Array(_order);
         bytes32 orderHash = keccak256(orderSig);
+
+        require(fills[orderHash] == false, "Order already filled or canceled by the maker");
+        require(makerAddress != takerAddress, "Maker and taker should be different");
+        require(order.expiration > now, "Order already expired and no longer valid");
+        require(msg.sender != makerAddress, "Order cannot be executed by maker");
+        require(msg.sender == takerAddress, "Only taker can execute the order");
+
         delete order;
         uint256 i = uint256(_data[0])/32-1;
         order.expiration = uint256(_data[i]);
@@ -133,6 +140,21 @@ contract Exchange is VerifySig {
             order.takerErc1155Amounts.push(uint256(_data[i]));
         }
 
+        require(order.makerErc20Addresses.length == order.makerErc20Amounts.length,
+            "Invalid Order, Size of erc20 address array and amounts different");
+        require(order.makerErc721Addresses.length == order.makerErc721Ids.length,
+            "Invalid Order, Size of erc721 address array and amounts different");
+        require(order.makerErc1155Addresses.length == order.makerErc1155Ids.length
+            && order.makerErc1155Addresses.length == order.makerErc1155Amounts.length,
+            "Invalid Order, Size of erc1155 address array and amounts different");
+
+        require(order.takerErc20Addresses.length == order.takerErc20Amounts.length,
+            "Invalid Order, Size of erc20 address array and amounts different");
+        require(order.takerErc721Addresses.length == order.takerErc721Ids.length,
+            "Invalid Order, Size of erc721 address array and amounts different");
+        require(order.takerErc1155Addresses.length == order.takerErc1155Ids.length
+            && order.takerErc1155Addresses.length == order.takerErc1155Amounts.length,
+            "Invalid Order, Size of erc1155 address array and amounts different");
         require(verify(makerAddress, _order, order.expiration, nonce, orderSig) == true, "Order Signature not valid");
 
         fills[orderHash] = true;
