@@ -189,8 +189,8 @@ contract MetaExchange is VerifySignature {
         for (i=0; i<_order.takerErc20Addresses.length; i++) {
             if (_order.takerErc20Addresses[i] == address(0)) {
                 require(msg.value == _order.takerErc20Amounts[i], "Ether amount sent incorrect");
-                address payable mkrAdress = address(uint160(_makerAddress));
-                mkrAdress.transfer(msg.value);
+                address payable mkrAddress = address(uint160(_makerAddress));
+                mkrAddress.transfer(msg.value);
             }
             else {
                 IERC20(_order.takerErc20Addresses[i]).transferFrom(_takerAddress, _makerAddress, _order.takerErc20Amounts[i]);

@@ -36,7 +36,7 @@ contract Exchange is VerifySig {
 
         //verify sig
         require(verify(maker, actions, orders, nonce, expiration, orderSig), "Order signature not valid");
-        
+
         fills[keccak256(orderSig)] = true;
 
         for (uint256 i=0; i < actions.length; i++) {
@@ -72,8 +72,8 @@ contract Exchange is VerifySig {
             else {
                 if (tokenAddresses[i] == address(0)) {
                     require(msg.value == amounts[i], "Ether amount sent incorrect");
-                    address payable mkrAdress = address(uint160(maker));
-                    mkrAdress.transfer(msg.value);
+                    address payable mkrAddress = address(uint160(maker));
+                    mkrAddress.transfer(msg.value);
                 }
                 else {
                     IERC20(tokenAddresses[i]).transferFrom(taker, maker, amounts[i]);
